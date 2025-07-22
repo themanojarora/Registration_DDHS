@@ -8,6 +8,8 @@ import io
 import datetime
 from docx.text.run import Run
 from docx.shared import Inches, RGBColor
+import os
+from dotenv import load_dotenv
 
 # ──────────────────────────────────────────────
 # Table handling
@@ -197,6 +199,56 @@ def replace_placeholder_in_paragraph(paragraph, mapping):
         paragraph.add_run(full_text)
 
 
+
+
+# ──────────────────────────────────────────────
+# Password Popup Logic
+# ──────────────────────────────────────────────
+load_dotenv()
+APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+def password_popup():
+    # Render overlay background only
+    st.markdown("""
+    <style>
+    .password-popup-bg {
+        position: absolute;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.5);
+        z-index: 1;
+        pointer-events: none;
+    }
+    .password-box {
+        position: relative;
+        z-index: 2;
+    }
+    </style>
+    <div class="password-popup-bg"></div>
+    """, unsafe_allow_html=True)
+    # Render password box in a Streamlit block (always interactive)
+    box = st.empty()
+    with box.container():
+        st.markdown("<div class='password-box' style='margin:auto; max-width:400px;'>", unsafe_allow_html=True)
+        st.markdown("#### 🔒 Enter Password to Access the App")
+        pw1, pw2, pw3, pw4 = st.columns(4)
+        pw_vals = []
+        for i, col in enumerate([pw1, pw2, pw3, pw4]):
+            pw_vals.append(col.text_input(f"Password digit {i+1}", type="password", key=f"pw_{i}", max_chars=1, label_visibility="collapsed"))
+        pw_input = "".join(pw_vals)
+        submit = st.button("Submit", key="pw_submit")
+        if submit:
+            if pw_input == APP_PASSWORD:
+                st.session_state["authenticated"] = True
+            else:
+                st.error("Incorrect password. Please try again.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+if not st.session_state["authenticated"]:
+    password_popup()
+    st.stop()
 
 # ──────────────────────────────────────────────
 # Main Streamlit UI
