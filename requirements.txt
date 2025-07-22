@@ -2,3 +2,4 @@ streamlit
 openpyxl
 python-docx
 datetime
+dotenv
